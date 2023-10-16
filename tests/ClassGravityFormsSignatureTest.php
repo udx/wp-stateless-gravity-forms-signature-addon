@@ -1,6 +1,6 @@
 <?php
 
-namespace WPSL\GravityForms;
+namespace WPSL\GravityFormSignature;
 
 use PHPUnit\Framework\TestCase;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
@@ -9,7 +9,7 @@ use Brain\Monkey\Actions;
 use Brain\Monkey\Filters;
 use Brain\Monkey\Functions;
 use wpCloud\StatelessMedia\WPStatelessStub;
-use WPSL\BuddyPress\BuddyPress;
+use WPSL\GravityFormSignature\GravityFormSignature;
 
 /**
  * Class ClassGravityFormsSignatureTest
@@ -53,77 +53,61 @@ class ClassGravityFormsSignatureTest extends TestCase {
 	}
 
   public function testShouldInitHooks() {
-    // $gravityForms = new GravityForms();
+    $gravityFormSignature = new GravityFormSignature();
 
-    // Actions\expectDone('sm:sync::register_dir')->once();
+    $gravityFormSignature->module_init([]);
 
-    // $gravityForms->module_init([]);
-
-    // self::assertNotFalse( has_action('sm::synced::nonMediaFiles', [ $gravityForms, 'modify_db' ]) );
-    // self::assertNotFalse( has_action('gform_file_path_pre_delete_file', [ $gravityForms, 'gform_file_path_pre_delete_file' ]) );
-
-    // self::assertNotFalse( has_filter('gform_save_field_value', [ $gravityForms, 'gform_save_field_value' ]) );
-    // self::assertNotFalse( has_filter('stateless_skip_cache_busting', [ $gravityForms, 'skip_cache_busting' ]) );
+    self::assertNotFalse( has_filter('gform_save_field_value', [ $gravityFormSignature, 'gform_save_field_value' ]) );
+    self::assertNotFalse( has_filter('site_url', [ $gravityFormSignature, 'signature_url' ]) );
+    self::assertNotFalse( has_filter('gform_signature_delete_file_pre_delete_entry', [ $gravityFormSignature, 'delete_signature' ]) );
   }
 
-  public function testShouldSaveFieldValueFileUpload() {
-    // $gravityForms = new GravityForms();
+  public function testShouldSaveFieldValue() {
+    $gravityFormSignature = new GravityFormSignature();
 
-    // $gravityForms->gform_save_field_value(self::SRC_URL, ['id' => 15], new \GFFormsField(), null, null);
+    Actions\expectDone('sm:sync::syncFile')->once();
 
-    // Actions\expectDone('sm:sync::syncFile')->once();
+    $gravityFormSignature->gform_save_field_value(self::TEST_FILE, null, null, null, null);
 
-    // $this->assertEquals(
-    //   self::DST_URL,
-    //   $gravityForms->gform_save_field_value(self::SRC_URL, ['id' => 15], new \GFFormsField(), null, null)
-    // );
+    $this->assertTrue(true);
   }
 
-  public function testShouldSaveFieldValuePostImage() {
-    // $gravityForms = new GravityForms();
+  public function testShouldProcessSignatureUrl() {
+    $gravityFormSignature = new GravityFormSignature();
 
-    // \GFFormsModel::set_input_type('post_image');
+    Functions\when('rgar')->justReturn( 'GFSignature' );
 
-    // $gravityForms->gform_save_field_value(self::SRC_URL, ['id' => 15], new \GFFormsField(), null, null);
+    Actions\expectDone('sm:sync::syncFile')->once();
 
-    // self::assertNotFalse( has_action('gform_after_create_post', 'function ($post_id, $lead, $form)' ) );
+    $this->assertEquals(
+      self::DST_URL,
+      $gravityFormSignature->signature_url(self::SRC_URL, null, null, null) 
+    );
   }
 
-  public function testShouldModifyDb() {
-    /**
-     * @TODO: tests fot modify_db method
-     */
-  }
+  public function testShouldRemoveSignatureFile() {
+    $gravityFormSignature = new GravityFormSignature();
 
-  public function testShouldRemoveMedia() {
-    // $gravityForms = new GravityForms();
+    Functions\when('rgar')->justReturn( null );
 
-    // $gravityForms->gform_file_path_pre_delete_file(self::DST_URL, self::SRC_URL);
+    Actions\expectDone('sm:sync::deleteFile')
+      ->once()
+      ->with(self::TEST_FILE);
 
-    // $this->assertEquals(
-    //   self::TEST_FILE,
-    //   WPStatelessStub::instance()->removed_file
-    // );
-  }
-
-  public function testShouldSkipCacheBusting() {
-  //   $gravityForms = new GravityForms();
-
-  //   $gravityForms->gform_file_path_pre_delete_file(self::DST_URL, self::SRC_URL);
-
-  //   $this->assertEquals(
-  //     self::DST_URL,
-  //     $gravityForms->skip_cache_busting(self::SRC_URL, self::DST_URL)
-  //   );
+    $gravityFormSignature->delete_signature(self::TEST_FILE, null, 15, null);
+    
+    $this->assertTrue(true);
   }
 }
 
-/* function debug_backtrace($a, $b) {
+function debug_backtrace($a, $b) {
   return [
-    '7' => [
-      'class' => 'GFExport',
-      'function' => 'write_file',
+    [
+      'class' => 'GFSignature',
+      'function' => 'get_signature_url',
+      'args' => [
+        ClassGravityFormsSignatureTest::TEST_FILE,
+      ]
     ],
   ];
 }
- */
