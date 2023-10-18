@@ -3,7 +3,7 @@
         'name' => 'udx/wp-stateless-gravity-forms-signature-addon',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '2cc803f9b116636705f6c225fe4bdfd22e50fb8c',
+        'reference' => 'bdb5f98710471d0f1605638e649df83c70939523',
         'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -319,7 +319,7 @@
         'udx/wp-stateless-gravity-forms-signature-addon' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '2cc803f9b116636705f6c225fe4bdfd22e50fb8c',
+            'reference' => 'bdb5f98710471d0f1605638e649df83c70939523',
             'type' => 'wordpress-plugin',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
