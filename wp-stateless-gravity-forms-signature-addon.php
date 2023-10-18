@@ -6,7 +6,7 @@
  * Description: Provides compatibility for Gravity Forms Signature with WP-Stateless.
  * Author: UDX
  * Version: 0.0.1
- * Text Domain: wpslea
+ * Text Domain: wpsgfs
  * Author URI: https://udx.io
  * License: MIT
  * 
