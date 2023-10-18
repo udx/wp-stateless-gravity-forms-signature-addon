@@ -98,6 +98,45 @@ class ClassGravityFormsSignatureTest extends TestCase {
     
     $this->assertTrue(true);
   }
+
+  public function testShouldGetSignatureUrlDisabled() {
+    $gravityFormSignature = new GravityFormSignature();
+
+    ud_get_stateless_media()->set('sm.mode', 'disabled');
+
+    Actions\expectDone('sm:sync::syncFile')->never();
+
+    $this->assertEquals(
+      self::SRC_URL,
+      $gravityFormSignature->get_signature_url(self::SRC_URL, 'image', null, null) 
+    );
+  }
+
+  public function testShouldGetSignatureUrlBackup() {
+    $gravityFormSignature = new GravityFormSignature();
+
+    ud_get_stateless_media()->set('sm.mode', 'backup');
+
+    Actions\expectDone('sm:sync::syncFile')->once();
+
+    $this->assertEquals(
+      self::SRC_URL,
+      $gravityFormSignature->get_signature_url(self::SRC_URL, 'image', null, null) 
+    );
+  }
+
+  public function testShouldGetSignatureUrlCdn() {
+    $gravityFormSignature = new GravityFormSignature();
+
+    ud_get_stateless_media()->set('sm.mode', 'cdn');
+
+    Actions\expectDone('sm:sync::syncFile')->once();
+
+    $this->assertEquals(
+      self::DST_URL,
+      $gravityFormSignature->get_signature_url(self::SRC_URL, 'image', null, null) 
+    );
+  }
 }
 
 function debug_backtrace($a, $b) {

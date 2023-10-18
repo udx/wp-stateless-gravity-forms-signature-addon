@@ -19,6 +19,7 @@ class GravityFormSignature extends Compatibility {
     add_filter('gform_save_field_value', array($this, 'gform_save_field_value'), 10, 5);
     add_filter('site_url', array($this, 'signature_url'), 10, 4);
     add_filter('gform_signature_delete_file_pre_delete_entry', array($this, 'delete_signature'), 10, 4);
+    add_filter('gform_signature_url', array($this, 'get_signature_url'), 10, 4);
   }
 
   /**
@@ -42,7 +43,7 @@ class GravityFormSignature extends Compatibility {
         $folder = \GFSignature::get_signatures_folder();
         $file_path = $folder . $value;
 
-        $name = apply_filters('wp_stateless_file_name', $file_path);
+        $name = apply_filters('wp_stateless_file_name', $file_path, false);
         do_action('sm:sync::syncFile', $name, $file_path, true);
       } catch (\Throwable $th) {
         //throw $th;
@@ -52,7 +53,8 @@ class GravityFormSignature extends Compatibility {
   }
 
   /**
-   * Currently there is no way to fileter signature url. So instead we are filtering site_url function
+   * [older version of Gravity Forms Signature]
+   * Currently there is no way to filter signature url. So instead we are filtering site_url function
    * with help of debug backtrace.
    *
    * Also doing sync on the fly for previous entries.
@@ -74,6 +76,36 @@ class GravityFormSignature extends Compatibility {
     } catch (\Throwable $th) {
       //throw $th;
     }
+    return $url;
+  }
+
+  /**
+   * [newer version of Gravity Forms Signature]
+   * Get GSC URL for signature image.
+   *
+   * Also doing sync on the fly for previous entries.
+   */
+  public function get_signature_url($url, $filename, $form_id, $field_id) {
+    $mode = ud_get_stateless_media()->get('sm.mode');
+
+    if ( $mode === 'disabled' ) {
+      return $url;
+    }
+
+    // Sync signature file
+    try {
+      $folder = \GFSignature::get_signatures_folder();
+      $absolute_path = $folder . $filename . '.png';
+      $name = apply_filters('wp_stateless_file_name', $absolute_path, false);
+      do_action('sm:sync::syncFile', $name, $absolute_path);
+
+      if ( $mode !== 'backup' ) {
+        $url = ud_get_stateless_media()->get_gs_host() . '/' . $name;
+      }
+    } catch (\Throwable $th) {
+      //throw $th;
+    }
+    
     return $url;
   }
 
