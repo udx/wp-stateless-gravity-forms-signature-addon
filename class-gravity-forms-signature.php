@@ -1,10 +1,15 @@
 <?php
 
-namespace WPSL\GravityFormSignature;
+namespace SLCA\GravityFormSignature;
 
 use wpCloud\StatelessMedia\Compatibility;
 
+/**
+ * Class GravityFormSignature
+ */
 class GravityFormSignature extends Compatibility {
+  const GF_SIGNATURE_PATH = 'gravity_forms/signatures/';
+
   protected $id = 'gravity-form-signature';
   protected $title = 'Gravity Forms Signature Add-On';
   protected $constant = 'WP_STATELESS_COMPATIBILITY_GF_SIG';
@@ -16,10 +21,14 @@ class GravityFormSignature extends Compatibility {
    * @param $sm
    */
   public function module_init($sm) {
+    $this->plugin_version = defined('GF_SIGNATURE_VERSION') ? GF_SIGNATURE_VERSION : '';
+
     add_filter('gform_save_field_value', array($this, 'gform_save_field_value'), 10, 5);
-    add_filter('site_url', array($this, 'signature_url'), 10, 4);
     add_filter('gform_signature_delete_file_pre_delete_entry', array($this, 'delete_signature'), 10, 4);
     add_filter('gform_signature_url', array($this, 'get_signature_url'), 10, 4);
+
+    add_filter('sm:sync::syncArgs', array($this, 'sync_args'), 10, 4);
+
   }
 
   /**
@@ -35,48 +44,37 @@ class GravityFormSignature extends Compatibility {
     if (empty($value)) return $value;
 
     $type = \GFFormsModel::get_input_type($field);
+    
     if ($type == 'signature') {
-      /**
-       * Compatibility for Signature addon.
-       */
+      $is_stateless = ud_get_stateless_media()->get('sm.mode') === 'stateless';
+
       try {
         $folder = \GFSignature::get_signatures_folder();
         $file_path = $folder . $value;
 
-        $name = apply_filters('wp_stateless_file_name', $file_path, false);
-        do_action('sm:sync::syncFile', $name, $file_path, true);
+        // For stateless mode there is no way to override signature upload path in GFSignature::get_signatures_folder()
+        // so we have to move the file to the proper location
+        if ( $is_stateless ) {
+          $old_path = $file_path;
+          $file_path = ud_get_stateless_media()->get_gs_path() . '/' . self::GF_SIGNATURE_PATH . $value;
+
+          if ( !class_exists('\WP_Filesystem_Direct') ) {
+            require_once(ABSPATH . 'wp-admin/includes/class-wp-filesystem-base.php');
+            require_once(ABSPATH . 'wp-admin/includes/class-wp-filesystem-direct.php');
+          }
+
+          $filesystem = new \WP_Filesystem_Direct( false );
+          $res = $filesystem->move($old_path, $file_path, true);
+        }
+
+        $name = self::GF_SIGNATURE_PATH . $value;
+        $name = apply_filters('wp_stateless_file_name', $name, 0);
+
+        do_action( 'sm:sync::syncFile', $name, $file_path, true );
       } catch (\Throwable $th) {
-        //throw $th;
       }
     }
     return $value;
-  }
-
-  /**
-   * [older version of Gravity Forms Signature]
-   * Currently there is no way to filter signature url. So instead we are filtering site_url function
-   * with help of debug backtrace.
-   *
-   * Also doing sync on the fly for previous entries.
-   */
-  public function signature_url($url, $path, $scheme, $blog_id) {
-    try {
-      $db = debug_backtrace(false, 7);
-      foreach ($db as $key => $value) {
-        if ($value['function'] == 'get_signature_url' && rgar($value, 'class') == 'GFSignature') {
-          $folder = \GFSignature::get_signatures_folder();
-          $name = $value['args'][0];
-          $file_path = $folder . $name . '.png';
-          $name = apply_filters('wp_stateless_file_name', $file_path);
-          do_action('sm:sync::syncFile', $name, $file_path);
-          $url = ud_get_stateless_media()->get_gs_host() . '/' . $name;
-          break;
-        }
-      }
-    } catch (\Throwable $th) {
-      //throw $th;
-    }
-    return $url;
   }
 
   /**
@@ -103,7 +101,6 @@ class GravityFormSignature extends Compatibility {
         $url = ud_get_stateless_media()->get_gs_host() . '/' . $name;
       }
     } catch (\Throwable $th) {
-      //throw $th;
     }
     
     return $url;
@@ -115,16 +112,36 @@ class GravityFormSignature extends Compatibility {
   public function delete_signature($return, $form, $lead_id, $field_id) {
     try {
       $lead = \RGFormsModel::get_lead($lead_id);
-      $folder = \GFSignature::get_signatures_folder();
-
       $name = rgar($lead, $field_id);
-      $file_path = $folder . $name;
 
-      $name = apply_filters('wp_stateless_file_name', $file_path);
-      do_action('sm:sync::deleteFile', $name);
+      do_action('sm:sync::deleteFile', self::GF_SIGNATURE_PATH . $name);
     } catch (\Throwable $th) {
-      //throw $th;
     }
     return $return;
+  }
+
+  /**
+   * Update args when uploading/syncing GF file to GCS.
+   * 
+   * @param array $args
+   * @param string $name
+   * @param string $file
+   * @param bool $force
+   * 
+   * @return array
+   */
+  public function sync_args($args, $name, $file, $force) {
+    if ( strpos($name, self::GF_SIGNATURE_PATH) === false ) {
+      return $args;
+    }
+
+    if ( ud_get_stateless_media()->is_mode('stateless') ) {
+      $args['name_with_root'] = false;
+    }
+
+    $args['source'] = 'Gravity Forms Signature';
+    $args['source_version'] = $this->plugin_version;
+
+    return $args;
   }
 }

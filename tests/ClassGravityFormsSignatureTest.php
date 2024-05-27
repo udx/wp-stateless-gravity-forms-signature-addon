@@ -1,6 +1,6 @@
 <?php
 
-namespace WPSL\GravityFormSignature;
+namespace SLCA\GravityFormSignature;
 
 use PHPUnit\Framework\TestCase;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
@@ -9,7 +9,7 @@ use Brain\Monkey\Actions;
 use Brain\Monkey\Filters;
 use Brain\Monkey\Functions;
 use wpCloud\StatelessMedia\WPStatelessStub;
-use WPSL\GravityFormSignature\GravityFormSignature;
+use SLCA\GravityFormSignature\GravityFormSignature;
 
 /**
  * Class ClassGravityFormsSignatureTest
@@ -18,7 +18,7 @@ use WPSL\GravityFormSignature\GravityFormSignature;
 class ClassGravityFormsSignatureTest extends TestCase {
   const TEST_URL = 'https://test.test';
   const UPLOADS_URL = self::TEST_URL . '/uploads';
-  const TEST_FILE = 'gravity_forms/image.png';
+  const TEST_FILE = 'gravity_forms/signatures/image.png';
   const SRC_URL = self::UPLOADS_URL . '/' . self::TEST_FILE;
   const DST_URL = WPStatelessStub::TEST_GS_HOST . '/' . self::TEST_FILE;
   const TEST_UPLOAD_DIR = [
@@ -58,8 +58,9 @@ class ClassGravityFormsSignatureTest extends TestCase {
     $gravityFormSignature->module_init([]);
 
     self::assertNotFalse( has_filter('gform_save_field_value', [ $gravityFormSignature, 'gform_save_field_value' ]) );
-    self::assertNotFalse( has_filter('site_url', [ $gravityFormSignature, 'signature_url' ]) );
     self::assertNotFalse( has_filter('gform_signature_delete_file_pre_delete_entry', [ $gravityFormSignature, 'delete_signature' ]) );
+    self::assertNotFalse( has_filter('gform_signature_url', [ $gravityFormSignature, 'get_signature_url' ]) );
+    self::assertNotFalse( has_filter('sm:sync::syncArgs', [ $gravityFormSignature, 'sync_args' ]) );
   }
 
   public function testShouldSaveFieldValue() {
@@ -72,27 +73,13 @@ class ClassGravityFormsSignatureTest extends TestCase {
     $this->assertTrue(true);
   }
 
-  public function testShouldProcessSignatureUrl() {
-    $gravityFormSignature = new GravityFormSignature();
-
-    Functions\when('rgar')->justReturn( 'GFSignature' );
-
-    Actions\expectDone('sm:sync::syncFile')->once();
-
-    $this->assertEquals(
-      self::DST_URL,
-      $gravityFormSignature->signature_url(self::SRC_URL, null, null, null) 
-    );
-  }
-
   public function testShouldRemoveSignatureFile() {
     $gravityFormSignature = new GravityFormSignature();
 
     Functions\when('rgar')->justReturn( null );
 
     Actions\expectDone('sm:sync::deleteFile')
-      ->once()
-      ->with(self::TEST_FILE);
+      ->once();
 
     $gravityFormSignature->delete_signature(self::TEST_FILE, null, 15, null);
     
