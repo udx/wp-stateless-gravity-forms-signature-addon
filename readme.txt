@@ -1,11 +1,11 @@
 === WP-Stateless - Gravity Forms Signature Addon ===
 Contributors: usability_dynamics, andypotanin, ideric, maxim.peshkov, planvova, obolgun
 Donate link: https://udx.io
-Tags: gravity forms. gravity forms signature, signature, google, google cloud, google cloud storage, cdn, uploads, media, stateless, backup
+Tags: gravity forms signature, gravity forms signature addon extension, google cloud storage, stateless, wp-stateless
 License: GPLv2 or later
 Requires PHP: 8.0
 Requires at least: 5.0
-Tested up to: 6.4.1
+Tested up to: 6.5.3
 Stable tag: 0.0.1
 
 Provides compatibility between the Gravity Forms Signature and the WP-Stateless plugins.
