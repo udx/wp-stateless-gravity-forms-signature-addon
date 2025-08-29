@@ -64,7 +64,7 @@ class GravityFormSignature extends Compatibility {
           }
 
           $filesystem = new \WP_Filesystem_Direct( false );
-          $res = $filesystem->move($old_path, $file_path, true);
+          $filesystem->move($old_path, $file_path, true);
         }
 
         $name = self::GF_SIGNATURE_PATH . $value;
