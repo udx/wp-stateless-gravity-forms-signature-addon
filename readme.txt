@@ -5,7 +5,7 @@ Tags: gravity forms signature, gravity forms signature addon extension, google c
 License: GPLv2 or later
 Requires PHP: 8.0
 Requires at least: 5.0
-Tested up to: 6.7.1
+Tested up to: 6.8
 Stable tag: 0.0.2
 
 Provides compatibility between the Gravity Forms Signature and the WP-Stateless plugins.
@@ -20,7 +20,7 @@ Provides compatibility between the [Gravity Forms Signature](https://www.gravity
 
 = Notes =
 
-* Tested with Gravity Forms Signature plugin version 4.6.0
+* Tested with Gravity Forms Signature plugin version 4.8.1
 
 = Support, Feedback, & Contribute =
 
@@ -43,8 +43,9 @@ To ensure new releases cause as little disruption as possible, we rely on early 
 == Upgrade Notice ==
 
 == Changelog ==
+= 0.0.2 =
+* Tested with Gravity Forms Sugnature version 4.8.1
 
 = 0.0.1 =
-
 * Initial public release.
 

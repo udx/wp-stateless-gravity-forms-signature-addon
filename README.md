@@ -8,7 +8,7 @@ Provides compatibility between the [Gravity Forms Signature](https://www.gravity
 
 ### Notes
 
-* Tested with Gravity Forms Signature plugin version 4.6.0
+* Tested with Gravity Forms Signature plugin version 4.8.1
 
 ### Support, Feedback, & Contribute
 
